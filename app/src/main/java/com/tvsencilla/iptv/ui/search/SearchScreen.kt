@@ -183,7 +183,16 @@ fun SearchScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            TvTextField(
+            // Solo se busca hablando. El recuadro de texto queda únicamente en aparatos sin
+            // reconocimiento de voz (Fire TV), donde se dicta con el mando dentro de él.
+            if (canRecognizeSpeech) {
+                if (state.hasQuery) {
+                    Text(
+                        text = stringResource(R.string.search_you_said, state.query),
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                }
+            } else TvTextField(
                 label = stringResource(R.string.search_by_keyboard),
                 value = state.query,
                 onValueChange = viewModel::onQueryChange,

@@ -129,6 +129,7 @@
     <string name="search_results_movies">Películas</string>
     <string name="search_results_series">Series</string>
     <string name="search_no_results">No hemos encontrado nada con «%1$s»</string>
+    <string name="search_you_said">Ha dicho: «%1$s»</string>
     <string name="search_listening">Escuchando… diga lo que quiere ver</string>
     <string name="search_nothing_heard">No le hemos entendido. Pulse el botón y hable otra vez.</string>
     <string name="search_voice_unavailable">Este televisor no permite buscar hablando. Use el teclado.</string>
