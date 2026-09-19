@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Para escuchar la búsqueda por voz dentro de la app (en Xiaomi la pantalla de Google no
+         devuelve lo dicho). Si se deniega, se usa la pantalla de Google. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- Leanback / TV only: no touchscreen, D-pad driven. -->
     <uses-feature

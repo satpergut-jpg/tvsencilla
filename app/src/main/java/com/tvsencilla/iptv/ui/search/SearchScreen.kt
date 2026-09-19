@@ -1,6 +1,11 @@
 package com.tvsencilla.iptv.ui.search
 
+import android.Manifest
 import android.app.Activity
+import android.app.SearchManager
+import android.content.pm.PackageManager
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.content.ContextCompat
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.RecognizerIntent
@@ -84,12 +89,57 @@ fun SearchScreen(
     val voiceLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) return@rememberLauncherForActivityResult
-        val spoken = result.data
-            ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            ?.firstOrNull()
+        // Cada fabricante devuelve lo dicho en un sitio distinto, y alguno sin RESULT_OK: si hay
+        // texto, se usa.
+        val data = result.data ?: return@rememberLauncherForActivityResult
+        val spoken = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull { it.isNotBlank() }
+            ?: data.getStringExtra(SearchManager.QUERY)
+            ?: data.dataString?.takeIf { result.resultCode == Activity.RESULT_OK }
             ?: return@rememberLauncherForActivityResult
         viewModel.onVoiceResult(spoken)
+    }
+
+    fun launchGoogleVoiceScreen() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
+            putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.search_by_voice_hint))
+        }
+        try {
+            voiceLauncher.launch(intent)
+        } catch (e: ActivityNotFoundException) {
+            voiceUnavailable = true
+        }
+    }
+
+    var isListening by remember { mutableStateOf(false) }
+    var heardText by remember { mutableStateOf("") }
+    var nothingHeard by remember { mutableStateOf(false) }
+    val inAppSpeech = remember {
+        InAppSpeech(
+            context = context,
+            onListening = { isListening = it },
+            onPartial = { heardText = it },
+            onResult = { heardText = ""; viewModel.onVoiceResult(it) },
+            onUnavailable = { heardText = ""; launchGoogleVoiceScreen() },
+            onNothingHeard = { heardText = ""; nothingHeard = true },
+        )
+    }
+    DisposableEffect(Unit) { onDispose { inAppSpeech.stop() } }
+
+    val micPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) inAppSpeech.start() else launchGoogleVoiceScreen() }
+
+    fun startVoice() {
+        voiceUnavailable = false
+        nothingHeard = false
+        when {
+            !inAppSpeech.isAvailable -> launchGoogleVoiceScreen()
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED -> inAppSpeech.start()
+            else -> micPermission.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     LaunchedEffect(Unit) { viewModel.tuneTo.collect(onPlayChannel) }
@@ -102,26 +152,25 @@ fun SearchScreen(
                     style = MaterialTheme.typography.bodyLarge,
                 )
             } else BigButton(
-                text = stringResource(R.string.search_by_voice),
-                icon = Icons.Default.Mic,
-                onClick = {
-                    val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                        putExtra(
-                            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM,
-                        )
-                        putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault().toLanguageTag())
-                        putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.search_by_voice_hint))
-                    }
-                    try {
-                        voiceLauncher.launch(intent)
-                    } catch (e: ActivityNotFoundException) {
-                        voiceUnavailable = true
-                    }
+                text = if (isListening) {
+                    heardText.ifBlank { stringResource(R.string.search_listening) }
+                } else {
+                    stringResource(R.string.search_by_voice)
                 },
+                icon = Icons.Default.Mic,
+                // Pulsar otra vez mientras escucha deja de escuchar.
+                onClick = { if (isListening) inAppSpeech.stop() else startVoice() },
                 minHeight = 64.dp,
                 modifier = Modifier.fillMaxWidth().focusRequester(voiceButton),
             )
+
+            if (nothingHeard) {
+                Text(
+                    text = stringResource(R.string.search_nothing_heard),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 20.dp),
+                )
+            }
 
             if (voiceUnavailable) {
                 Text(
