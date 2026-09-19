@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <path
+        android:fillColor="#0B0F14"
+        android:pathData="M0,0h320v180H0z" />
+
+    <!-- Screen outline -->
+    <path
+        android:fillColor="#4FA3FF"
+        android:pathData="M40,42h140a10,10 0 0 1 10,10v76a10,10 0 0 1 -10,10H40a10,10 0 0 1 -10,-10V52a10,10 0 0 1 10,-10z" />
+    <path
+        android:fillColor="#0B0F14"
+        android:pathData="M44,52h132a4,4 0 0 1 4,4v68a4,4 0 0 1 -4,4H44a4,4 0 0 1 -4,-4V56a4,4 0 0 1 4,-4z" />
+
+    <!-- Play mark -->
+    <path
+        android:fillColor="#FFD400"
+        android:pathData="M96,72l40,18l-40,18z" />
+
+    <!-- Stand -->
+    <path
+        android:fillColor="#4FA3FF"
+        android:pathData="M88,140h64v8h-64z" />
+
+    <!-- Wordmark bars -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M212,70h76v12h-76z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M212,94h54v10h-54z" />
+    <path
+        android:fillColor="#4FA3FF"
+        android:pathData="M212,114h38v8h-38z" />
+</vector>

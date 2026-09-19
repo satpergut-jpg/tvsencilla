@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TV Sencilla</string>
+
+    <!-- Comunes -->
+    <string name="common_ok">Aceptar</string>
+    <string name="common_cancel">Cancelar</string>
+    <string name="common_back">Atrás</string>
+    <string name="common_retry">Reintentar</string>
+    <string name="common_loading">Cargando…</string>
+    <string name="common_save">Guardar</string>
+    <string name="common_close">Cerrar</string>
+    <string name="common_yes">Sí</string>
+    <string name="common_no">No</string>
+    <string name="common_continue">Continuar</string>
+    <string name="common_empty">No hay nada que mostrar todavía</string>
+    <string name="common_search">Buscar</string>
+    <string name="common_minutes">%1$d minutos</string>
+    <string name="common_year">Año %1$s</string>
+
+    <!-- Errores en lenguaje sencillo -->
+    <string name="error_no_internet">No hay internet. Revise el router y vuelva a intentarlo.</string>
+    <string name="error_source_unreachable">No podemos conectar con su proveedor de televisión. Inténtelo de nuevo en unos minutos.</string>
+    <string name="error_bad_credentials">Los datos de acceso no son correctos. Revise el usuario y la contraseña.</string>
+    <string name="error_empty_list">Su lista de canales está vacía. Pregunte a su proveedor.</string>
+    <string name="error_generic">Algo no ha ido bien. Pulse Reintentar.</string>
+    <string name="error_channel_not_found">No hay canal en el %1$d</string>
+    <string name="error_playback">No se puede ver este canal ahora mismo.</string>
+    <string name="error_channel_not_responding">Este canal no responde ahora mismo. Pruebe con otro canal usando las flechas arriba y abajo.</string>
+
+    <!-- Primer arranque -->
+    <string name="setup_title">Vamos a configurar su televisión</string>
+    <string name="setup_choose_title">¿Cómo quiere entrar? Elija con las flechas y pulse Aceptar</string>
+    <string name="setup_type_m3u">Lista M3U (una dirección de internet)</string>
+    <string name="setup_type_xtream">Servidor, usuario y contraseña (Xtream)</string>
+    <string name="setup_type_xtream_link">Enlace completo de Xtream</string>
+    <string name="setup_field_xtream_link">Enlace que le dio su proveedor (con usuario y contraseña)</string>
+    <string name="setup_error_bad_link">El enlace no tiene usuario y contraseña. Revíselo o use la opción de servidor, usuario y contraseña.</string>
+    <string name="setup_field_m3u_url">Dirección de la lista (URL)</string>
+    <string name="setup_field_epg_url">Dirección de la guía EPG (opcional)</string>
+    <string name="setup_field_server">Servidor</string>
+    <string name="setup_field_user">Usuario</string>
+    <string name="setup_field_password">Contraseña</string>
+    <string name="setup_connect">Conectar</string>
+    <string name="setup_checking">Comprobando sus datos…</string>
+    <string name="setup_success">¡Listo! Ya puede ver la televisión.</string>
+
+    <!-- Inicio -->
+    <string name="home_live_tv">TV en directo</string>
+    <string name="home_movies">Películas</string>
+    <string name="home_series">Series</string>
+    <string name="home_settings">Ajustes</string>
+    <string name="home_continue_watching">Seguir viendo</string>
+    <string name="home_exit_title">¿Quiere salir de la app?</string>
+    <string name="home_exit_confirm">Sí, salir</string>
+    <string name="home_exit_cancel">No, quedarme</string>
+
+    <!-- TV en directo -->
+    <string name="live_title">TV en directo</string>
+    <string name="live_all_categories">Todos los canales</string>
+    <string name="live_category_news">Noticias</string>
+    <string name="live_category_sports">Deportes</string>
+    <string name="live_category_movies">Cine</string>
+    <string name="live_category_kids">Infantil</string>
+    <string name="live_now">Ahora</string>
+    <string name="live_next">Después</string>
+    <string name="live_until">hasta las %1$s</string>
+    <string name="live_no_epg">Sin información de programación</string>
+    <string name="live_previous_channel">Canal anterior</string>
+    <string name="live_open_list">Ver la lista de canales</string>
+    <string name="live_catch_up">Ver desde el principio</string>
+    <string name="live_full_guide">Guía completa</string>
+    <plurals name="live_channel_count">
+        <item quantity="one">%1$d canal</item>
+        <item quantity="other">%1$d canales</item>
+    </plurals>
+
+    <!-- Favoritos -->
+    <string name="favorites_empty">Todavía no tiene canales favoritos. Mientras ve un canal, pulse Aceptar y elija «Añadir a favoritos». También puede hacerlo desde la lista: elija un canal y pulse la flecha derecha.</string>
+    <string name="live_category_favorites">★ Favoritos</string>
+    <string name="live_banner_hint">Pulse Aceptar para ver las opciones</string>
+    <string name="likes_category">Me gusta</string>
+    <string name="likes_add">Me gusta</string>
+    <string name="likes_remove">Quitar de Me gusta</string>
+    <string name="likes_empty">Todavía no ha marcado nada con «Me gusta». Abra una película o una serie y pulse el botón «Me gusta».</string>
+    <string name="favorites_add">Añadir a favoritos</string>
+    <string name="favorites_remove">Quitar de favoritos</string>
+    <string name="favorites_added">%1$s se ha añadido a Favoritos en el número %2$d</string>
+    <string name="favorites_removed">%1$s ya no está en Favoritos</string>
+    <string name="favorites_reorder">Ordenar favoritos</string>
+    <string name="favorites_reorder_help">Pulse Aceptar sobre un canal, muévalo con arriba y abajo, y vuelva a pulsar Aceptar para dejarlo.</string>
+    <string name="favorites_reorder_moving">Moviendo «%1$s». Use arriba y abajo.</string>
+    <string name="favorites_set_number">Poner en el número…</string>
+    <string name="favorites_set_number_title">¿En qué número quiere poner «%1$s»?</string>
+    <string name="favorites_set_number_hint">Escriba un número del 1 al %1$d con el mando</string>
+
+    <!-- Marcación numérica -->
+    <string name="dialer_hint">Escriba el número del canal con el mando</string>
+
+    <!-- Películas -->
+    <string name="movies_title">Películas</string>
+    <string name="movies_all">Todas las películas</string>
+    <string name="movies_watch">Ver</string>
+    <string name="movies_continue">Continuar</string>
+    <string name="movies_restart">Empezar de nuevo</string>
+    <string name="movies_duration">Duración: %1$s</string>
+    <string name="movies_synopsis">Resumen</string>
+
+    <!-- Series -->
+    <string name="series_title">Series</string>
+    <string name="series_all">Todas las series</string>
+    <string name="series_season">Temporada %1$d</string>
+    <string name="series_seasons">Temporadas</string>
+    <string name="series_episode_number">Capítulo %1$d</string>
+    <string name="series_watched">Visto</string>
+    <string name="series_next_episode_in">El siguiente capítulo empieza en %1$d segundos</string>
+    <string name="series_play_next_now">Ver ahora</string>
+    <string name="series_cancel_next">No, gracias</string>
+
+    <!-- Búsqueda -->
+    <string name="search_title">Buscar</string>
+    <string name="search_by_voice">Buscar hablando</string>
+    <string name="search_by_voice_hint">Diga lo que quiere ver, por ejemplo: «Real Madrid»</string>
+    <string name="search_results_programs">En la programación</string>
+    <string name="search_program_now">Ahora: %1$s</string>
+    <string name="search_program_at">A las %1$s: %2$s</string>
+    <string name="search_by_keyboard">Escribir con el mando</string>
+    <string name="search_results_channels">Canales</string>
+    <string name="search_results_movies">Películas</string>
+    <string name="search_results_series">Series</string>
+    <string name="search_no_results">No hemos encontrado nada con «%1$s»</string>
+    <string name="search_voice_unavailable">Este televisor no permite buscar hablando. Use el teclado.</string>
+    <string name="search_voice_with_remote">Para buscar hablando: pulse Aceptar en el recuadro de abajo, mantenga pulsado el botón del micrófono del mando y diga lo que quiere ver.</string>
+
+    <!-- Reproductor -->
+    <string name="player_play">Reproducir</string>
+    <string name="player_pause">Pausa</string>
+    <string name="player_rewind">Atrás</string>
+    <string name="player_forward">Adelante</string>
+    <string name="player_audio">Audio</string>
+    <string name="player_subtitles">Subtítulos</string>
+    <string name="player_quality">Calidad</string>
+    <string name="player_subtitles_off">Sin subtítulos</string>
+    <string name="player_quality_auto">Automática</string>
+    <string name="player_reconnecting">Reconectando…</string>
+    <string name="player_controls_hint">Pulse arriba o abajo para usar los botones. Aceptar pone o quita la pausa.</string>
+    <string name="player_channel_list">Lista de canales</string>
+
+    <!-- Ajustes -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_simple_mode">Modo sencillo</string>
+    <string name="settings_simple_mode_on">Activado: solo se ven las opciones necesarias</string>
+    <string name="settings_simple_mode_off">Desactivado: se ven todas las opciones</string>
+    <string name="settings_font_size">Tamaño de letra</string>
+    <string name="settings_font_normal">Normal</string>
+    <string name="settings_font_large">Grande</string>
+    <string name="settings_font_xlarge">Muy grande</string>
+    <string name="settings_subtitle_size">Tamaño de los subtítulos</string>
+    <string name="settings_audio_language">Idioma del audio preferido</string>
+    <string name="settings_subtitle_language">Idioma de los subtítulos preferido</string>
+    <string name="settings_numbering">Qué numeración usan los números del mando</string>
+    <string name="settings_numbering_favorites">La de mis Favoritos (1, 2, 3…)</string>
+    <string name="settings_numbering_full">La de la lista completa de canales</string>
+    <string name="settings_start_on_last_channel">Al abrir, ir directamente al último canal visto</string>
+    <string name="settings_epg_grid">Mostrar también la guía completa en cuadrícula</string>
+    <string name="settings_voice_auto_tune">Al pedir un canal hablando, ponerlo directamente</string>
+    <string name="settings_parental">Control parental</string>
+    <string name="settings_parental_hidden_categories">Categorías ocultas</string>
+    <string name="settings_change_pin">Cambiar el PIN</string>
+    <string name="settings_change_source">Cambiar de proveedor</string>
+    <string name="settings_about">Información de la app</string>
+    <string name="settings_about_version">Versión %1$s</string>
+    <string name="settings_clear_cache">Borrar caché</string>
+    <string name="settings_cache_cleared">La caché se ha borrado</string>
+    <string name="settings_refresh_epg">Actualizar la guía ahora</string>
+    <string name="settings_profiles">Perfiles de usuario</string>
+
+    <!-- PIN -->
+    <string name="pin_title">Escriba su PIN</string>
+    <string name="pin_hint">4 cifras con los números del mando</string>
+    <string name="pin_wrong">El PIN no es correcto. Inténtelo otra vez.</string>
+    <string name="pin_create_title">Cree un PIN de 4 cifras</string>
+    <string name="pin_repeat_title">Repita el PIN</string>
+    <string name="pin_mismatch">Los dos PIN no coinciden</string>
+    <string name="pin_default_notice">Si nunca lo ha cambiado, el PIN es 0000</string>
+    <string name="pin_saved">El PIN se ha guardado</string>
+    <string name="pin_protected">Esta pantalla está protegida con PIN</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#FF0B0F14</color>
+    <color name="surface">#FF161C24</color>
+    <color name="primary">#FF4FA3FF</color>
+    <color name="focus">#FFFFD400</color>
+    <color name="on_background">#FFFFFFFF</color>
+    <color name="banner_background">#FF0B0F14</color>
+</resources>
