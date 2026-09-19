@@ -26,7 +26,7 @@ private val colors = darkColorScheme(
     onSurfaceVariant = SnowDim,
     error = LiveRed,
     onError = Ink,
-    border = FocusYellow,
+    border = FocusRing,
 )
 
 /** Subtitle scaling is separate from the UI text scale, because viewers tune them differently. */

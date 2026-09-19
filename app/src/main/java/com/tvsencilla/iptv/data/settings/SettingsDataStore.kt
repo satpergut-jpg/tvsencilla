@@ -34,6 +34,7 @@ class SettingsDataStore @Inject constructor(
             preferences[Keys.START_ON_LAST_CHANNEL] = updated.startOnLastChannel
             preferences[Keys.SHOW_EPG_GRID] = updated.showEpgGrid
             preferences[Keys.VOICE_AUTO_TUNE] = updated.voiceAutoTune
+            preferences[Keys.SEARCH_INPUT_MODE] = updated.searchInputMode.name
             preferences[Keys.AUDIO_LANGUAGE] = updated.preferredAudioLanguage
             preferences[Keys.SUBTITLE_LANGUAGE] = updated.preferredSubtitleLanguage
             preferences[Keys.PIN] = updated.pin
@@ -55,6 +56,7 @@ class SettingsDataStore @Inject constructor(
             startOnLastChannel = this[Keys.START_ON_LAST_CHANNEL] ?: defaults.startOnLastChannel,
             showEpgGrid = this[Keys.SHOW_EPG_GRID] ?: defaults.showEpgGrid,
             voiceAutoTune = this[Keys.VOICE_AUTO_TUNE] ?: defaults.voiceAutoTune,
+            searchInputMode = this[Keys.SEARCH_INPUT_MODE].toEnum(defaults.searchInputMode),
             preferredAudioLanguage = this[Keys.AUDIO_LANGUAGE] ?: defaults.preferredAudioLanguage,
             preferredSubtitleLanguage = this[Keys.SUBTITLE_LANGUAGE] ?: defaults.preferredSubtitleLanguage,
             pin = this[Keys.PIN] ?: defaults.pin,
@@ -75,6 +77,7 @@ class SettingsDataStore @Inject constructor(
         val START_ON_LAST_CHANNEL = booleanPreferencesKey("start_on_last_channel")
         val SHOW_EPG_GRID = booleanPreferencesKey("show_epg_grid")
         val VOICE_AUTO_TUNE = booleanPreferencesKey("voice_auto_tune")
+        val SEARCH_INPUT_MODE = stringPreferencesKey("search_input_mode")
         val AUDIO_LANGUAGE = stringPreferencesKey("audio_language")
         val SUBTITLE_LANGUAGE = stringPreferencesKey("subtitle_language")
         val PIN = stringPreferencesKey("pin")

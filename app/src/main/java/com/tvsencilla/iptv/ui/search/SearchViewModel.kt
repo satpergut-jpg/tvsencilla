@@ -6,6 +6,7 @@ import com.tvsencilla.iptv.BuildConfig
 import com.tvsencilla.iptv.domain.model.Channel
 import com.tvsencilla.iptv.domain.model.Movie
 import com.tvsencilla.iptv.domain.model.ProgramMatch
+import com.tvsencilla.iptv.domain.model.SearchInputMode
 import com.tvsencilla.iptv.domain.model.Series
 import com.tvsencilla.iptv.domain.repository.ChannelRepository
 import com.tvsencilla.iptv.domain.repository.EpgRepository
@@ -21,7 +22,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
@@ -54,6 +58,11 @@ class SearchViewModel @Inject constructor(
     val state: StateFlow<SearchUiState> = _state.asStateFlow()
 
     private val queries = MutableStateFlow("")
+
+    /** Null hasta leer el ajuste, para no enseñar un momento la forma de buscar equivocada. */
+    val inputMode: StateFlow<SearchInputMode?> = settingsRepository.settings
+        .map { it.searchInputMode }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     private val _tuneTo = MutableSharedFlow<Channel>(extraBufferCapacity = 1)
 

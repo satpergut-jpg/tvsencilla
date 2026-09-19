@@ -166,6 +166,10 @@
     <string name="settings_numbering_full">La de la lista completa de canales</string>
     <string name="settings_start_on_last_channel">Al abrir, ir directamente al último canal visto</string>
     <string name="settings_epg_grid">Mostrar también la guía completa en cuadrícula</string>
+    <string name="settings_search_mode">Cómo buscar</string>
+    <string name="settings_search_mode_voice">Solo voz</string>
+    <string name="settings_search_mode_text">Solo texto</string>
+    <string name="settings_search_mode_both">Voz y texto</string>
     <string name="settings_voice_auto_tune">Al pedir un canal hablando, ponerlo directamente</string>
     <string name="settings_parental">Control parental</string>
     <string name="settings_parental_hidden_categories">Categorías ocultas</string>

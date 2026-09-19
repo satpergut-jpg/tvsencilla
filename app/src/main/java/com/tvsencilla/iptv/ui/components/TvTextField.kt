@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
+import com.tvsencilla.iptv.ui.theme.FocusRing
 import com.tvsencilla.iptv.ui.theme.FocusYellow
 
 /**
@@ -72,7 +73,7 @@ fun TvTextField(
                 .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
                 .border(
                     width = if (focused) 6.dp else 2.dp,
-                    color = if (focused) FocusYellow else Color.White.copy(alpha = 0.16f),
+                    color = if (focused) FocusRing else Color.White.copy(alpha = 0.16f),
                     shape = RoundedCornerShape(12.dp),
                 )
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
