@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.tvsencilla.iptv.BuildConfig
+import com.tvsencilla.iptv.data.net.CloudflareDns
 import com.tvsencilla.iptv.data.xtream.XtreamApi
 import dagger.Module
 import dagger.Provides
@@ -31,13 +32,21 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .callTimeout(0, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(true)
-        .apply { if (BuildConfig.DEBUG) addInterceptor(redactingLogger()) }
-        .build()
+    fun provideOkHttpClient(): OkHttpClient {
+        // Cliente mínimo solo para hablar con el resolver de Cloudflare; no puede usar DoH él mismo.
+        val bootstrap = OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .build()
+        return bootstrap.newBuilder()
+            .dns(CloudflareDns(bootstrap))
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .callTimeout(0, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .apply { if (BuildConfig.DEBUG) addInterceptor(redactingLogger()) }
+            .build()
+    }
 
     /**
      * Xtream puts the subscription password straight into the query string, so the URL can never
