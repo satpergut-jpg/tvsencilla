@@ -34,6 +34,18 @@ import com.tvsencilla.iptv.BuildConfig
 import com.tvsencilla.iptv.R
 import com.tvsencilla.iptv.domain.model.ContinueWatchingItem
 import com.tvsencilla.iptv.ui.components.BigButton
+import com.tvsencilla.iptv.ui.components.FocusableSurface
+import com.tvsencilla.iptv.ui.theme.Tint
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.tv.material3.Icon
+import androidx.tv.material3.MaterialTheme
+import androidx.tv.material3.Text
 import com.tvsencilla.iptv.ui.components.ConfirmDialog
 import com.tvsencilla.iptv.ui.components.PosterCard
 import com.tvsencilla.iptv.ui.components.SectionTitle
@@ -112,40 +124,42 @@ fun HomeScreen(
                     icon = Icons.Default.Search,
                     onClick = onSearch,
                     minHeight = 52.dp,
+                    brush = Tint.Search,
                 )
                 BigButton(
                     text = stringResource(R.string.home_settings),
                     icon = Icons.Default.Settings,
                     onClick = onSettings,
                     minHeight = 52.dp,
+                    brush = Tint.Neutral,
                 )
             }
         },
     ) {
         Column {
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp), modifier = Modifier.fillMaxWidth()) {
-                BigButton(
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.fillMaxWidth()) {
+                HomeTile(
                     text = stringResource(R.string.home_live_tv),
                     icon = Icons.Default.LiveTv,
+                    brush = Tint.Live,
                     onClick = onLiveTv,
-                    minHeight = 104.dp,
                     modifier = Modifier.weight(1f).focusRequester(firstButton),
                 )
                 if (state.showMovies) {
-                    BigButton(
+                    HomeTile(
                         text = stringResource(R.string.home_movies),
                         icon = Icons.Default.Movie,
+                        brush = Tint.Movies,
                         onClick = onMovies,
-                        minHeight = 104.dp,
                         modifier = Modifier.weight(1f),
                     )
                 }
                 if (state.showSeries) {
-                    BigButton(
+                    HomeTile(
                         text = stringResource(R.string.home_series),
                         icon = Icons.Default.Tv,
+                        brush = Tint.Series,
                         onClick = onSeries,
-                        minHeight = 104.dp,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -185,6 +199,35 @@ fun HomeScreen(
             onConfirm = onExit,
             onDismiss = { showExitDialog = false },
         )
+    }
+}
+
+/** Tarjeta grande de color, con el icono encima del nombre, como los iconos de Apple TV. */
+@Composable
+private fun HomeTile(
+    text: String,
+    icon: ImageVector,
+    brush: Brush,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FocusableSurface(
+        onClick = onClick,
+        brush = brush,
+        shape = RoundedCornerShape(24.dp),
+        contentAlignment = Alignment.Center,
+        modifier = modifier.height(132.dp),
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

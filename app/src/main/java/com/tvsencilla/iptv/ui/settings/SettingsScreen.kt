@@ -26,6 +26,7 @@ import com.tvsencilla.iptv.BuildConfig
 import com.tvsencilla.iptv.R
 import com.tvsencilla.iptv.domain.model.FontSizeOption
 import com.tvsencilla.iptv.domain.model.NumberingMode
+import com.tvsencilla.iptv.domain.model.SearchInputMode
 import com.tvsencilla.iptv.domain.model.SubtitleSizeOption
 import com.tvsencilla.iptv.ui.components.BigButton
 import com.tvsencilla.iptv.ui.components.MessageBanner
@@ -121,6 +122,16 @@ fun SettingsScreen(
                         onClick = { viewModel.setStartOnLastChannel(!state.settings.startOnLastChannel) },
                         minHeight = 56.dp,
                         modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                SettingsGroup(stringResource(R.string.settings_search_mode)) {
+                    OptionRow(
+                        options = SearchInputMode.entries.map { mode ->
+                            mode to stringResource(mode.labelRes())
+                        },
+                        selected = state.settings.searchInputMode,
+                        onSelect = viewModel::setSearchInputMode,
                     )
                 }
 
@@ -295,6 +306,12 @@ private fun SubtitleSizeOption.labelRes(): Int = when (this) {
 private fun NumberingMode.labelRes(): Int = when (this) {
     NumberingMode.FAVORITES -> R.string.settings_numbering_favorites
     NumberingMode.FULL_LIST -> R.string.settings_numbering_full
+}
+
+private fun SearchInputMode.labelRes(): Int = when (this) {
+    SearchInputMode.VOICE -> R.string.settings_search_mode_voice
+    SearchInputMode.TEXT -> R.string.settings_search_mode_text
+    SearchInputMode.BOTH -> R.string.settings_search_mode_both
 }
 
 private val LANGUAGES = listOf(

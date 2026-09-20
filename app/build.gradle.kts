@@ -142,6 +142,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+    implementation(libs.okhttp.dnsoverhttps)
 
     // Storage / background
     implementation(libs.datastore.preferences)

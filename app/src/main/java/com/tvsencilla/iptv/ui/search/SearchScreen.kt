@@ -44,6 +44,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tvsencilla.iptv.R
 import com.tvsencilla.iptv.domain.model.Channel
+import com.tvsencilla.iptv.domain.model.SearchInputMode
 import com.tvsencilla.iptv.ui.components.BigButton
 import com.tvsencilla.iptv.ui.components.ChannelListItem
 import com.tvsencilla.iptv.ui.components.EmptyState
@@ -67,6 +68,7 @@ fun SearchScreen(
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val inputMode by viewModel.inputMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var voiceUnavailable by remember { mutableStateOf(false) }
     val voiceButton = remember { FocusRequester() }
@@ -80,10 +82,16 @@ fun SearchScreen(
             .isNotEmpty()
     }
 
-    // Al entrar, el cursor ya está donde se empieza: en "Buscar hablando", o en el campo de texto
-    // si el aparato no permite buscar hablando.
-    LaunchedEffect(Unit) {
-        runCatching { if (canRecognizeSpeech) voiceButton.requestFocus() else textField.requestFocus() }
+    // El ajuste "Cómo buscar" decide qué se enseña. Sin reconocimiento de voz (Fire TV) siempre
+    // queda el recuadro, porque allí se dicta con el mando dentro de él.
+    val mode = inputMode
+    val showVoice = canRecognizeSpeech && mode != null && mode != SearchInputMode.TEXT
+    val showText = mode != null && (!canRecognizeSpeech || mode != SearchInputMode.VOICE)
+
+    // Al entrar, el cursor ya está donde se empieza: en "Buscar hablando" o en el campo de texto.
+    LaunchedEffect(mode) {
+        if (mode == null) return@LaunchedEffect
+        runCatching { if (showVoice) voiceButton.requestFocus() else textField.requestFocus() }
     }
 
     val voiceLauncher = rememberLauncherForActivityResult(
@@ -146,12 +154,13 @@ fun SearchScreen(
 
     TvScreen(title = stringResource(R.string.search_title)) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-            if (!canRecognizeSpeech) {
+            if (!canRecognizeSpeech && mode != null && mode != SearchInputMode.TEXT) {
                 Text(
                     text = stringResource(R.string.search_voice_with_remote),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-            } else BigButton(
+            }
+            if (showVoice) BigButton(
                 text = if (isListening) {
                     heardText.ifBlank { stringResource(R.string.search_listening) }
                 } else {
@@ -183,21 +192,20 @@ fun SearchScreen(
 
             Spacer(Modifier.height(18.dp))
 
-            // Solo se busca hablando. El recuadro de texto queda únicamente en aparatos sin
-            // reconocimiento de voz (Fire TV), donde se dicta con el mando dentro de él.
-            if (canRecognizeSpeech) {
-                if (state.hasQuery) {
-                    Text(
-                        text = stringResource(R.string.search_you_said, state.query),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                }
-            } else TvTextField(
-                label = stringResource(R.string.search_by_keyboard),
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                focusRequester = textField,
-            )
+            if (showText) {
+                if (showVoice) Spacer(Modifier.height(4.dp))
+                TvTextField(
+                    label = stringResource(R.string.search_by_keyboard),
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChange,
+                    focusRequester = textField,
+                )
+            } else if (state.hasQuery) {
+                Text(
+                    text = stringResource(R.string.search_you_said, state.query),
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
 

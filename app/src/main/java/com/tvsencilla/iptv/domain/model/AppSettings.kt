@@ -19,6 +19,9 @@ enum class SubtitleSizeOption(val scale: Float) {
  */
 enum class NumberingMode { FAVORITES, FULL_LIST }
 
+/** Cómo se busca: hablando, escribiendo con el mando o con las dos cosas a la vez. */
+enum class SearchInputMode { VOICE, TEXT, BOTH }
+
 data class AppSettings(
     val setupCompleted: Boolean = false,
     val simpleMode: Boolean = true,
@@ -29,6 +32,7 @@ data class AppSettings(
     val showEpgGrid: Boolean = false,
     /** Al pedir un canal por voz, ponerlo directamente en lugar de enseñar la lista. */
     val voiceAutoTune: Boolean = true,
+    val searchInputMode: SearchInputMode = SearchInputMode.VOICE,
     val preferredAudioLanguage: String = "es",
     val preferredSubtitleLanguage: String = "es",
     val pin: String = DEFAULT_PIN,

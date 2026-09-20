@@ -9,6 +9,7 @@ import com.tvsencilla.iptv.domain.model.AppSettings
 import com.tvsencilla.iptv.domain.model.Category
 import com.tvsencilla.iptv.domain.model.FontSizeOption
 import com.tvsencilla.iptv.domain.model.NumberingMode
+import com.tvsencilla.iptv.domain.model.SearchInputMode
 import com.tvsencilla.iptv.domain.model.SubtitleSizeOption
 import com.tvsencilla.iptv.domain.repository.ChannelRepository
 import com.tvsencilla.iptv.domain.repository.EpgRepository
@@ -95,6 +96,8 @@ class SettingsViewModel @Inject constructor(
     fun setShowEpgGrid(enabled: Boolean) = update { it.copy(showEpgGrid = enabled) }
 
     fun setVoiceAutoTune(enabled: Boolean) = update { it.copy(voiceAutoTune = enabled) }
+
+    fun setSearchInputMode(mode: SearchInputMode) = update { it.copy(searchInputMode = mode) }
 
     fun setAudioLanguage(language: String) = update { it.copy(preferredAudioLanguage = language) }
 

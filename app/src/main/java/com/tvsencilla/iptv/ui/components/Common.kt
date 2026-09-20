@@ -32,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -44,7 +46,9 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tvsencilla.iptv.R
-import com.tvsencilla.iptv.ui.theme.FocusYellow
+import com.tvsencilla.iptv.ui.theme.FocusRing
+import com.tvsencilla.iptv.ui.theme.PremiumLook
+import com.tvsencilla.iptv.ui.theme.ScreenBackground
 import com.tvsencilla.iptv.ui.theme.overscan
 
 /**
@@ -57,9 +61,11 @@ fun FocusableSurface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: Shape = RoundedCornerShape(14.dp),
+    shape: Shape = RoundedCornerShape(if (PremiumLook) 18.dp else 14.dp),
     containerColor: Color = MaterialTheme.colorScheme.surface,
     focusedContainerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    /** Si se da, rellena la superficie con un degradado de color en lugar de un gris. */
+    brush: Brush? = null,
     contentAlignment: Alignment = Alignment.CenterStart,
     contentPadding: Dp = 16.dp,
     content: @Composable (focused: Boolean) -> Unit,
@@ -75,11 +81,25 @@ fun FocusableSurface(
     Box(
         modifier = modifier
             .scale(scale)
+            // Premium: la pieza enfocada "flota" con una sombra, como en Apple TV.
+            .then(
+                if (PremiumLook && focused) {
+                    Modifier.shadow(elevation = 18.dp, shape = shape, ambientColor = Color.Black, spotColor = Color.Black)
+                } else {
+                    Modifier
+                },
+            )
             .clip(shape)
-            .background(if (focused) focusedContainerColor else containerColor)
+            .then(
+                if (brush != null) {
+                    Modifier.background(brush).background(Color.White.copy(alpha = if (focused) 0.12f else 0f))
+                } else {
+                    Modifier.background(if (focused) focusedContainerColor else containerColor)
+                },
+            )
             .border(
                 width = if (focused) 4.dp else 1.dp,
-                color = if (focused) FocusYellow else Color.White.copy(alpha = 0.16f),
+                color = if (focused) FocusRing else Color.White.copy(alpha = if (PremiumLook) 0.08f else 0.16f),
                 shape = shape,
             )
             .onFocusChanged { focused = it.isFocused }
@@ -100,11 +120,13 @@ fun BigButton(
     icon: ImageVector? = null,
     enabled: Boolean = true,
     minHeight: Dp = 60.dp,
+    brush: Brush? = null,
 ) {
     FocusableSurface(
         onClick = onClick,
         modifier = modifier.heightIn(min = minHeight),
         enabled = enabled,
+        brush = brush,
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -155,7 +177,7 @@ fun TvScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(ScreenBackground)
             .overscan(),
     ) {
         if (title != null) {
