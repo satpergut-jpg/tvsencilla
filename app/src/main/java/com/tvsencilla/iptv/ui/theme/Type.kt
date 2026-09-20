@@ -24,6 +24,8 @@ private fun style(
         fontSize = size.sp,
         lineHeight = (size * 1.3f).sp,
         fontWeight = weight,
+        // Premium: los títulos grandes se aprietan un poco, como en una tipografía de marca.
+        letterSpacing = if (PremiumLook && sizeSp >= 25f) (-0.4f).sp else 0.sp,
     )
 }
 

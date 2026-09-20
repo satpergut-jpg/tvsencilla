@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
@@ -28,6 +29,7 @@ import com.tvsencilla.iptv.domain.model.displayName
 import com.tvsencilla.iptv.ui.components.ProgressStripe
 import com.tvsencilla.iptv.ui.components.RemoteImage
 import com.tvsencilla.iptv.ui.theme.FocusYellow
+import com.tvsencilla.iptv.ui.theme.PremiumLook
 import com.tvsencilla.iptv.ui.util.formatHourMinute
 
 /**
@@ -44,8 +46,18 @@ fun ChannelBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.Black.copy(alpha = 0.86f))
+            .then(
+                if (PremiumLook) {
+                    // Premium: un degradado que nace del vídeo en lugar de una caja opaca encima.
+                    Modifier
+                        .background(
+                            Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.92f))),
+                        )
+                        .padding(top = 36.dp)
+                } else {
+                    Modifier.clip(RoundedCornerShape(16.dp)).background(Color.Black.copy(alpha = 0.86f))
+                },
+            )
             .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -88,6 +100,21 @@ fun ChannelBanner(
                     progress = now.progressAt(System.currentTimeMillis()),
                     modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(5.dp)),
                 )
+                if (PremiumLook) {
+                    Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                        Text(
+                            text = formatHourMinute(now.startMillis),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = formatHourMinute(now.endMillis),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             } else {
                 Text(
                     text = stringResource(R.string.live_no_epg),

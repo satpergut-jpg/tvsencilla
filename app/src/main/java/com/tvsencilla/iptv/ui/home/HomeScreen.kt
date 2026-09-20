@@ -115,80 +115,18 @@ fun HomeScreen(
                 )
             }
         }
-    } else TvScreen(
-        title = stringResource(R.string.app_name),
-        trailing = {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                BigButton(
-                    text = stringResource(R.string.common_search),
-                    icon = Icons.Default.Search,
-                    onClick = onSearch,
-                    minHeight = 52.dp,
-                    brush = Tint.Search,
-                )
-                BigButton(
-                    text = stringResource(R.string.home_settings),
-                    icon = Icons.Default.Settings,
-                    onClick = onSettings,
-                    minHeight = 52.dp,
-                    brush = Tint.Neutral,
-                )
-            }
-        },
-    ) {
-        Column {
-            Row(horizontalArrangement = Arrangement.spacedBy(18.dp), modifier = Modifier.fillMaxWidth()) {
-                HomeTile(
-                    text = stringResource(R.string.home_live_tv),
-                    icon = Icons.Default.LiveTv,
-                    brush = Tint.Live,
-                    onClick = onLiveTv,
-                    modifier = Modifier.weight(1f).focusRequester(firstButton),
-                )
-                if (state.showMovies) {
-                    HomeTile(
-                        text = stringResource(R.string.home_movies),
-                        icon = Icons.Default.Movie,
-                        brush = Tint.Movies,
-                        onClick = onMovies,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                if (state.showSeries) {
-                    HomeTile(
-                        text = stringResource(R.string.home_series),
-                        icon = Icons.Default.Tv,
-                        brush = Tint.Series,
-                        onClick = onSeries,
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-
-            if (state.continueWatching.isNotEmpty()) {
-                Spacer(Modifier.height(22.dp))
-                SectionTitle(stringResource(R.string.home_continue_watching))
-                Spacer(Modifier.height(12.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(end = 32.dp),
-                ) {
-                    items(state.continueWatching, key = { it.itemId }) { item ->
-                        PosterCard(
-                            title = item.title,
-                            subtitle = item.subtitle,
-                            posterUrl = item.posterUrl,
-                            progress = item.fraction,
-                            onClick = { onContinueWatching(item) },
-                            // Más estrecha que en las rejillas: debajo de los botones de Inicio
-                            // solo queda sitio para una fila, y con el ancho normal el título
-                            // se salía por abajo de la pantalla.
-                            modifier = Modifier.width(CONTINUE_WATCHING_WIDTH),
-                        )
-                    }
-                }
-            }
-        }
+    } else {
+        PremiumHome(
+            state = state,
+            firstDestination = firstButton,
+            onLiveTv = onLiveTv,
+            onMovies = onMovies,
+            onSeries = onSeries,
+            onSearch = onSearch,
+            onSettings = onSettings,
+            onContinueWatching = onContinueWatching,
+            onJumpToChannel = onJumpToChannel,
+        )
     }
 
     if (showExitDialog) {
@@ -201,34 +139,3 @@ fun HomeScreen(
         )
     }
 }
-
-/** Tarjeta grande de color, con el icono encima del nombre, como los iconos de Apple TV. */
-@Composable
-private fun HomeTile(
-    text: String,
-    icon: ImageVector,
-    brush: Brush,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FocusableSurface(
-        onClick = onClick,
-        brush = brush,
-        shape = RoundedCornerShape(24.dp),
-        contentAlignment = Alignment.Center,
-        modifier = modifier.height(132.dp),
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(44.dp))
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-}
-
-private val CONTINUE_WATCHING_WIDTH = 112.dp

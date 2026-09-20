@@ -53,6 +53,16 @@ import com.tvsencilla.iptv.ui.remote.RemoteKey
 import com.tvsencilla.iptv.ui.remote.RemoteKeyBus
 import com.tvsencilla.iptv.ui.remote.RemoteKeyHandler
 import com.tvsencilla.iptv.ui.util.formatHourMinute
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import com.tvsencilla.iptv.ui.components.ProgressStripe
+import com.tvsencilla.iptv.ui.components.RemoteImage
+import com.tvsencilla.iptv.ui.theme.PremiumLook
+import com.tvsencilla.iptv.ui.theme.Tint
 import kotlinx.coroutines.delay
 
 @Composable
@@ -104,38 +114,61 @@ fun LiveTvScreen(
 
                 state.allChannels.isEmpty() -> EmptyState(stringResource(R.string.error_empty_list))
 
-                else -> Row(Modifier.fillMaxSize()) {
-                    CategoryColumn(
-                        state = state,
-                        onSelect = viewModel::selectCategory,
-                        onReorderFavorites = onReorderFavorites,
-                        modifier = Modifier.width(220.dp).fillMaxHeight(),
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    if (state.channels.isEmpty() && state.showingFavorites) {
-                        // Sin favoritos todavía: se explica cómo añadirlos, en su sitio.
-                        EmptyState(
-                            message = stringResource(R.string.favorites_empty),
-                            modifier = Modifier.weight(1f),
-                        )
-                    } else {
-                        ChannelColumn(
-                            state = state,
-                            restoreFocusToId = viewModel.lastFocusedChannelId,
-                            onFocused = viewModel::onChannelFocused,
-                            onClick = onPlayChannel,
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
-                        )
+                else -> {
+                    val channelsAndPanel: @Composable (Modifier) -> Unit = { boxModifier ->
+                        Row(boxModifier) {
+                            if (state.channels.isEmpty() && state.showingFavorites) {
+                                // Sin favoritos todavía: se explica cómo añadirlos, en su sitio.
+                                EmptyState(
+                                    message = stringResource(R.string.favorites_empty),
+                                    modifier = Modifier.weight(1f),
+                                )
+                            } else {
+                                ChannelColumn(
+                                    state = state,
+                                    restoreFocusToId = viewModel.lastFocusedChannelId,
+                                    onFocused = viewModel::onChannelFocused,
+                                    onClick = onPlayChannel,
+                                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                                )
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            FocusedChannelPanel(
+                                focused = focused,
+                                showFullGuide = state.showFullGuide,
+                                onPlay = { onPlayChannel(it) },
+                                onToggleFavorite = viewModel::toggleFavorite,
+                                onOpenFullGuide = { onOpenFullGuide(it.id) },
+                                modifier = Modifier.width(300.dp).fillMaxHeight(),
+                            )
+                        }
                     }
-                    Spacer(Modifier.width(16.dp))
-                    FocusedChannelPanel(
-                        focused = focused,
-                        showFullGuide = state.showFullGuide,
-                        onPlay = { onPlayChannel(it) },
-                        onToggleFavorite = viewModel::toggleFavorite,
-                        onOpenFullGuide = { onOpenFullGuide(it.id) },
-                        modifier = Modifier.width(300.dp).fillMaxHeight(),
-                    )
+
+                    if (PremiumLook) {
+                        // Premium: las categorías van en una fila de chips arriba y el ancho que
+                        // ocupaba su columna pasa a la lista de canales.
+                        Column(Modifier.fillMaxSize()) {
+                            CategoryChips(
+                                state = state,
+                                onSelect = viewModel::selectCategory,
+                                onReorderFavorites = onReorderFavorites,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            channelsAndPanel(Modifier.weight(1f).fillMaxWidth())
+                        }
+                    } else {
+                        Row(Modifier.fillMaxSize()) {
+                            CategoryColumn(
+                                state = state,
+                                onSelect = viewModel::selectCategory,
+                                onReorderFavorites = onReorderFavorites,
+                                modifier = Modifier.width(220.dp).fillMaxHeight(),
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            channelsAndPanel(Modifier.weight(1f).fillMaxHeight())
+                        }
+                    }
                 }
             }
 
@@ -175,6 +208,59 @@ fun FavoriteNotice.text(): String =
     } else {
         stringResource(R.string.favorites_removed, channelName)
     }
+
+/** Las mismas categorías que la columna clásica, en horizontal; la elegida lleva marca y color. */
+@Composable
+private fun CategoryChips(
+    state: LiveTvUiState,
+    onSelect: (String?) -> Unit,
+    onReorderFavorites: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    fun label(text: String, selected: Boolean) = if (selected) "✓  $text" else text
+
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(vertical = 6.dp),
+    ) {
+        item {
+            BigButton(
+                text = label(stringResource(R.string.live_category_favorites), state.showingFavorites),
+                onClick = { onSelect(FAVORITES_CATEGORY_ID) },
+                minHeight = 48.dp,
+                brush = if (state.showingFavorites) Tint.Live else null,
+            )
+        }
+        if (state.showingFavorites && state.hasFavorites) {
+            item {
+                BigButton(
+                    text = stringResource(R.string.favorites_reorder),
+                    icon = Icons.Default.SwapVert,
+                    onClick = onReorderFavorites,
+                    minHeight = 48.dp,
+                )
+            }
+        }
+        item {
+            BigButton(
+                text = label(stringResource(R.string.live_all_categories), state.selectedCategoryId == null),
+                onClick = { onSelect(null) },
+                minHeight = 48.dp,
+                brush = if (state.selectedCategoryId == null && !state.showingFavorites) Tint.Live else null,
+            )
+        }
+        items(state.categories, key = { it.id }) { category ->
+            val selected = state.selectedCategoryId == category.id
+            BigButton(
+                text = label(displayName(category.name), selected),
+                onClick = { onSelect(category.id) },
+                minHeight = 48.dp,
+                brush = if (selected) Tint.Live else null,
+            )
+        }
+    }
+}
 
 @Composable
 private fun CategoryColumn(
@@ -277,6 +363,20 @@ private fun FocusedChannelPanel(
     }
 
     Column(modifier = modifier) {
+        if (PremiumLook) {
+            RemoteImage(
+                url = focused.channel.logoUrl,
+                contentDescription = focused.channel.name,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(84.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Tint.Card)
+                    .padding(12.dp),
+            )
+            Spacer(Modifier.height(12.dp))
+        }
         Text(
             text = focused.channel.displayName,
             style = MaterialTheme.typography.titleMedium,
@@ -294,6 +394,12 @@ private fun FocusedChannelPanel(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp),
         )
+        if (now != null) {
+            ProgressStripe(
+                progress = now.progressAt(System.currentTimeMillis()),
+                modifier = Modifier.padding(top = 8.dp).clip(RoundedCornerShape(3.dp)),
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 

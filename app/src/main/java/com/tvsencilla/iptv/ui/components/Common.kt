@@ -46,6 +46,7 @@ import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tvsencilla.iptv.R
+import com.tvsencilla.iptv.ui.theme.FocusHalo
 import com.tvsencilla.iptv.ui.theme.FocusRing
 import com.tvsencilla.iptv.ui.theme.PremiumLook
 import com.tvsencilla.iptv.ui.theme.ScreenBackground
@@ -68,11 +69,13 @@ fun FocusableSurface(
     brush: Brush? = null,
     contentAlignment: Alignment = Alignment.CenterStart,
     contentPadding: Dp = 16.dp,
+    /** Las tarjetas de una fila aguantan más aumento que un botón a todo lo ancho. */
+    focusedScale: Float = FOCUSED_SCALE,
     content: @Composable (focused: Boolean) -> Unit,
 ) {
     var focused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (focused) FOCUSED_SCALE else 1f,
+        targetValue = if (focused) focusedScale else 1f,
         // Slow and gentle on purpose: nothing in this app should flicker or dart about.
         animationSpec = tween(durationMillis = 220),
         label = "focusScale",
@@ -84,7 +87,7 @@ fun FocusableSurface(
             // Premium: la pieza enfocada "flota" con una sombra, como en Apple TV.
             .then(
                 if (PremiumLook && focused) {
-                    Modifier.shadow(elevation = 18.dp, shape = shape, ambientColor = Color.Black, spotColor = Color.Black)
+                    Modifier.shadow(elevation = 18.dp, shape = shape, ambientColor = Color.Black, spotColor = FocusHalo)
                 } else {
                     Modifier
                 },

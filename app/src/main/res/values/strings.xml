@@ -51,6 +51,9 @@
     <string name="home_series">Series</string>
     <string name="home_settings">Ajustes</string>
     <string name="home_continue_watching">Seguir viendo</string>
+    <string name="home_live_now">Directos ahora</string>
+    <string name="home_hero_live">En directo</string>
+    <string name="home_hero_continue">Seguir viendo</string>
     <string name="home_exit_title">¿Quiere salir de la app?</string>
     <string name="home_exit_confirm">Sí, salir</string>
     <string name="home_exit_cancel">No, quedarme</string>

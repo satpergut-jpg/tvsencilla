@@ -35,6 +35,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.tvsencilla.iptv.domain.model.displayName
 import com.tvsencilla.iptv.ui.theme.FocusYellow
+import com.tvsencilla.iptv.ui.theme.LiveRed
+import com.tvsencilla.iptv.ui.theme.PremiumLook
+import com.tvsencilla.iptv.ui.theme.Tint
+import androidx.compose.ui.graphics.Brush
+
 
 /**
  * Ancho de carátula para las filas horizontales, elegido para que quepan cinco. En las rejillas
@@ -55,9 +60,10 @@ fun PosterCard(
         FocusableSurface(
             onClick = onClick,
             modifier = Modifier.fillMaxWidth().aspectRatio(2f / 3f),
-            shape = RoundedCornerShape(10.dp),
+            shape = RoundedCornerShape(if (PremiumLook) 14.dp else 10.dp),
             contentPadding = 0.dp,
             contentAlignment = Alignment.BottomStart,
+            focusedScale = if (PremiumLook) CARD_FOCUSED_SCALE else 1.02f,
         ) { _ ->
             Box(Modifier.fillMaxSize()) {
                 RemoteImage(
@@ -83,6 +89,73 @@ fun PosterCard(
         if (subtitle != null) {
             Text(
                 text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/** Aumento de las tarjetas de las filas horizontales del acabado premium. */
+private const val CARD_FOCUSED_SCALE = 1.06f
+
+/**
+ * Tarjeta 16:9 de un canal en directo: logo sobre fondo tintado, insignia DIRECTO y, si la guía lo
+ * sabe, el programa en emisión con su barra de progreso real.
+ */
+@Composable
+fun LiveCard(
+    channelName: String,
+    logoUrl: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    programTitle: String? = null,
+    progress: Float? = null,
+) {
+    Column(modifier = modifier) {
+        FocusableSurface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f),
+            shape = RoundedCornerShape(14.dp),
+            contentPadding = 0.dp,
+            contentAlignment = Alignment.BottomStart,
+            focusedScale = CARD_FOCUSED_SCALE,
+        ) { _ ->
+            Box(Modifier.fillMaxSize().background(Tint.Card)) {
+                RemoteImage(
+                    url = logoUrl,
+                    contentDescription = channelName,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 26.dp, vertical = 22.dp),
+                )
+                Text(
+                    text = "DIRECTO",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(LiveRed)
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                )
+                if (progress != null && progress > 0f) {
+                    ProgressStripe(progress = progress, modifier = Modifier.align(Alignment.BottomCenter))
+                }
+            }
+        }
+        Text(
+            text = displayName(channelName),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        if (programTitle != null) {
+            Text(
+                text = programTitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
