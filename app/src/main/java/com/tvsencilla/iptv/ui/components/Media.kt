@@ -236,6 +236,54 @@ fun ChannelListItem(
     }
 }
 
+/**
+ * Ficha cuadrada de un canal: logo centrado sobre fondo tintado y el nombre debajo. Es la pieza de
+ * la rejilla agrupada por categorías ("Televisión", "Fútbol"…) del acabado premium.
+ */
+@Composable
+fun SquareLogoTile(
+    name: String,
+    logoUrl: String?,
+    isFavorite: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        FocusableSurface(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = 0.dp,
+            focusedScale = CARD_FOCUSED_SCALE,
+        ) { _ ->
+            Box(Modifier.fillMaxSize().background(Tint.Card)) {
+                RemoteImage(
+                    url = logoUrl,
+                    contentDescription = name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize().padding(18.dp),
+                )
+                if (isFavorite) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = FocusYellow,
+                        modifier = Modifier.align(Alignment.TopEnd).padding(6.dp).size(18.dp),
+                    )
+                }
+            }
+        }
+        Text(
+            text = displayName(name),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+    }
+}
+
 /** The digits being dialled, shown large in a corner as "1_" or "12_". */
 @Composable
 fun DialledNumberOverlay(digits: String, modifier: Modifier = Modifier) {

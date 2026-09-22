@@ -10,6 +10,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.tvsencilla.iptv.R
 import com.tvsencilla.iptv.domain.model.Channel
+import com.tvsencilla.iptv.domain.model.ChannelQuality
 import com.tvsencilla.iptv.domain.model.NowNext
 import com.tvsencilla.iptv.domain.model.displayName
 import com.tvsencilla.iptv.domain.repository.ChannelRepository
@@ -57,6 +58,8 @@ data class LivePlayerUiState(
     val canWatchFromStart: Boolean = false,
     @StringRes val errorMessage: Int? = null,
     val notFoundNumber: Int? = null,
+    /** La calidad que se está viendo ahora, cuando el canal tiene más de una. */
+    val selectedQuality: ChannelQuality? = null,
 )
 
 @HiltViewModel
@@ -178,6 +181,7 @@ class LivePlayerViewModel @Inject constructor(
                 errorMessage = null,
                 hasPreviousChannel = previousChannelId != null,
                 canWatchFromStart = channel.supportsCatchUp,
+                selectedQuality = channel.qualityOptions.firstOrNull(),
             )
         }
         showBanner()
@@ -205,6 +209,30 @@ class LivePlayerViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    /** Pasa a la siguiente calidad disponible del canal actual, volviendo a la primera al llegar al final. */
+    fun switchQuality() {
+        val channel = currentChannel.value ?: return
+        val options = channel.qualityOptions
+        if (options.size < 2) return
+        val player = _player.value ?: return
+
+        val currentIndex = options.indexOf(_state.value.selectedQuality).let { if (it < 0) 0 else it }
+        val next = options[(currentIndex + 1) % options.size]
+
+        reconnectJob?.cancel()
+        reconnectPolicy.reset()
+        val url = formatMemory.adapt(next.streamUrl)
+        currentStreamUrl = url
+        hasTriedAlternateFormat = false
+
+        player.setMediaItem(MediaItem.fromUri(url))
+        player.prepare()
+        player.play()
+
+        _state.update { it.copy(selectedQuality = next, isReconnecting = false, errorMessage = null) }
+        showBanner()
     }
 
     fun channelUp() {

@@ -59,8 +59,11 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import com.tvsencilla.iptv.ui.components.NavDestination
+import com.tvsencilla.iptv.ui.components.NavRail
 import com.tvsencilla.iptv.ui.components.ProgressStripe
 import com.tvsencilla.iptv.ui.components.RemoteImage
+import com.tvsencilla.iptv.ui.components.SquareLogoTile
 import com.tvsencilla.iptv.ui.theme.PremiumLook
 import com.tvsencilla.iptv.ui.theme.Tint
 import kotlinx.coroutines.delay
@@ -71,6 +74,10 @@ fun LiveTvScreen(
     onPlayChannel: (Channel) -> Unit,
     onReorderFavorites: () -> Unit,
     onOpenFullGuide: (channelId: String) -> Unit,
+    onSearch: () -> Unit,
+    onMovies: () -> Unit,
+    onSeries: () -> Unit,
+    onSettings: () -> Unit,
     viewModel: LiveTvViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -145,17 +152,29 @@ fun LiveTvScreen(
                     }
 
                     if (PremiumLook) {
-                        // Premium: las categorías van en una fila de chips arriba y el ancho que
-                        // ocupaba su columna pasa a la lista de canales.
-                        Column(Modifier.fillMaxSize()) {
-                            CategoryChips(
-                                state = state,
-                                onSelect = viewModel::selectCategory,
-                                onReorderFavorites = onReorderFavorites,
-                                modifier = Modifier.fillMaxWidth(),
+                        // Premium: rail global a la izquierda (como en Inicio) y, en vez de una
+                        // lista filtrable por categoría, los canales agrupados por su categoría en
+                        // una rejilla de logos cuadrados.
+                        Row(Modifier.fillMaxSize()) {
+                            NavRail(
+                                current = NavDestination.LIVE,
+                                showMovies = state.showMovies,
+                                showSeries = state.showSeries,
+                                onSearch = onSearch,
+                                onLiveTv = {},
+                                onMovies = onMovies,
+                                onSeries = onSeries,
+                                onSettings = onSettings,
+                                modifier = Modifier.fillMaxHeight(),
                             )
-                            Spacer(Modifier.height(12.dp))
-                            channelsAndPanel(Modifier.weight(1f).fillMaxWidth())
+                            Spacer(Modifier.width(20.dp))
+                            ChannelGroups(
+                                state = state,
+                                onReorderFavorites = onReorderFavorites,
+                                onFocused = viewModel::onChannelFocused,
+                                onClick = onPlayChannel,
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                            )
                         }
                     } else {
                         Row(Modifier.fillMaxSize()) {
@@ -209,55 +228,127 @@ fun FavoriteNotice.text(): String =
         stringResource(R.string.favorites_removed, channelName)
     }
 
-/** Las mismas categorías que la columna clásica, en horizontal; la elegida lleva marca y color. */
+/**
+ * Rejilla del acabado premium: los canales de cada categoría en su propia sección, como fichas
+ * cuadradas con el logo. Los favoritos, si hay, encabezan la lista como una sección más.
+ */
 @Composable
-private fun CategoryChips(
+private fun ChannelGroups(
     state: LiveTvUiState,
-    onSelect: (String?) -> Unit,
     onReorderFavorites: () -> Unit,
+    onFocused: (Channel) -> Unit,
+    onClick: (Channel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    fun label(text: String, selected: Boolean) = if (selected) "✓  $text" else text
-
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(vertical = 6.dp),
-    ) {
-        item {
-            BigButton(
-                text = label(stringResource(R.string.live_category_favorites), state.showingFavorites),
-                onClick = { onSelect(FAVORITES_CATEGORY_ID) },
-                minHeight = 48.dp,
-                brush = if (state.showingFavorites) Tint.Live else null,
-            )
+    val initialFocus = remember { FocusRequester() }
+    val favorites = remember(state.allChannels) { state.allChannels.filter { it.isFavorite } }
+    val otherChannelsTitle = stringResource(R.string.live_other_channels)
+    // Un canal cuya categoría no está en la lista (sin categoría, o su categoría quedó oculta)
+    // no debe desaparecer sin más: cae en "Otros canales" para que siga siendo alcanzable.
+    val groups = remember(state.allChannels, state.categories, otherChannelsTitle) {
+        val knownCategoryIds = state.categories.map { it.id }.toSet()
+        val byCategory = state.allChannels.groupBy { it.categoryId }
+        val known = state.categories.mapNotNull { category ->
+            byCategory[category.id]?.takeIf { it.isNotEmpty() }
+                ?.let { ChannelSection(category.id, displayName(category.name), it) }
         }
-        if (state.showingFavorites && state.hasFavorites) {
-            item {
-                BigButton(
-                    text = stringResource(R.string.favorites_reorder),
-                    icon = Icons.Default.SwapVert,
-                    onClick = onReorderFavorites,
-                    minHeight = 48.dp,
+        val other = state.allChannels.filter { it.categoryId == null || it.categoryId !in knownCategoryIds }
+        if (other.isNotEmpty()) {
+            known + ChannelSection(OTHER_CATEGORY_ID, otherChannelsTitle, other)
+        } else {
+            known
+        }
+    }
+
+    LaunchedEffect(Unit) { runCatching { initialFocus.requestFocus() } }
+
+    if (favorites.isEmpty() && groups.isEmpty()) {
+        EmptyState(message = stringResource(R.string.error_empty_list), modifier = modifier)
+        return
+    }
+
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(26.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
+    ) {
+        if (favorites.isNotEmpty()) {
+            item(key = "favorites") {
+                ChannelGroupSection(
+                    title = stringResource(R.string.live_category_favorites),
+                    channels = favorites,
+                    firstItemFocusRequester = initialFocus,
+                    onFocused = onFocused,
+                    onClick = onClick,
+                    trailing = if (favorites.size > 1) {
+                        {
+                            BigButton(
+                                text = stringResource(R.string.favorites_reorder),
+                                icon = Icons.Default.SwapVert,
+                                onClick = onReorderFavorites,
+                                minHeight = 40.dp,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
         }
-        item {
-            BigButton(
-                text = label(stringResource(R.string.live_all_categories), state.selectedCategoryId == null),
-                onClick = { onSelect(null) },
-                minHeight = 48.dp,
-                brush = if (state.selectedCategoryId == null && !state.showingFavorites) Tint.Live else null,
+        itemsIndexed(groups, key = { _, group -> group.id }) { index, section ->
+            ChannelGroupSection(
+                title = section.title,
+                channels = section.channels,
+                firstItemFocusRequester = if (favorites.isEmpty() && index == 0) initialFocus else null,
+                onFocused = onFocused,
+                onClick = onClick,
             )
         }
-        items(state.categories, key = { it.id }) { category ->
-            val selected = state.selectedCategoryId == category.id
-            BigButton(
-                text = label(displayName(category.name), selected),
-                onClick = { onSelect(category.id) },
-                minHeight = 48.dp,
-                brush = if (selected) Tint.Live else null,
-            )
+    }
+}
+
+/** Una sección de la rejilla: una categoría real, o el cajón "Otros canales" sin categoría. */
+private data class ChannelSection(val id: String, val title: String, val channels: List<Channel>)
+
+private const val OTHER_CATEGORY_ID = "__otros__"
+
+@Composable
+private fun ChannelGroupSection(
+    title: String,
+    channels: List<Channel>,
+    firstItemFocusRequester: FocusRequester?,
+    onFocused: (Channel) -> Unit,
+    onClick: (Channel) -> Unit,
+    trailing: (@Composable () -> Unit)? = null,
+) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            SectionTitle(title, modifier = Modifier.weight(1f))
+            trailing?.invoke()
+        }
+        Spacer(Modifier.height(10.dp))
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 8.dp, end = 32.dp),
+        ) {
+            itemsIndexed(channels, key = { _, channel -> channel.id }) { index, channel ->
+                SquareLogoTile(
+                    name = channel.name,
+                    logoUrl = channel.logoUrl,
+                    isFavorite = channel.isFavorite,
+                    onClick = { onClick(channel) },
+                    modifier = Modifier
+                        .width(128.dp)
+                        .then(
+                            if (firstItemFocusRequester != null && index == 0) {
+                                Modifier.focusRequester(firstItemFocusRequester)
+                            } else {
+                                Modifier
+                            },
+                        )
+                        .onFocusChanged { if (it.isFocused) onFocused(channel) },
+                )
+            }
         }
     }
 }

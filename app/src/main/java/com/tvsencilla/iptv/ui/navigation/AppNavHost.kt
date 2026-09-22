@@ -73,6 +73,10 @@ fun AppNavHost(
                 onPlayChannel = { channel -> navController.navigate(Routes.livePlayer(channel.id)) },
                 onReorderFavorites = { navController.navigate(Routes.REORDER_FAVORITES) },
                 onOpenFullGuide = { channelId -> navController.navigate(Routes.epgGrid(channelId)) },
+                onSearch = { navController.navigate(Routes.SEARCH) },
+                onMovies = { navController.navigate(Routes.MOVIES) },
+                onSeries = { navController.navigate(Routes.SERIES) },
+                onSettings = { navController.navigate(Routes.SETTINGS) },
             )
         }
 

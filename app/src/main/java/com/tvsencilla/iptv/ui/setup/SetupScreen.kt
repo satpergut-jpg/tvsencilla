@@ -77,6 +77,13 @@ private fun MethodChooser(onChoose: (LoginMethod) -> Unit) {
             modifier = Modifier.fillMaxWidth().focusRequester(first),
         )
         BigButton(
+            text = stringResource(R.string.setup_type_xtream_auto),
+            icon = Icons.Default.Person,
+            onClick = { onChoose(LoginMethod.XTREAM_AUTO) },
+            minHeight = 76.dp,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        BigButton(
             text = stringResource(R.string.setup_type_xtream_link),
             icon = Icons.Default.Link,
             onClick = { onChoose(LoginMethod.XTREAM_LINK) },
@@ -103,6 +110,7 @@ private fun LoginForm(method: LoginMethod, state: SetupUiState, viewModel: Setup
             stringResource(
                 when (method) {
                     LoginMethod.XTREAM -> R.string.setup_type_xtream
+                    LoginMethod.XTREAM_AUTO -> R.string.setup_type_xtream_auto
                     LoginMethod.XTREAM_LINK -> R.string.setup_type_xtream_link
                     LoginMethod.M3U -> R.string.setup_type_m3u
                 },
@@ -124,6 +132,28 @@ private fun LoginForm(method: LoginMethod, state: SetupUiState, viewModel: Setup
                     label = stringResource(R.string.setup_field_user),
                     value = state.username,
                     onValueChange = viewModel::onUsernameChange,
+                )
+                Spacer(Modifier.height(14.dp))
+                TvTextField(
+                    label = stringResource(R.string.setup_field_password),
+                    value = state.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    isPassword = true,
+                )
+            }
+
+            LoginMethod.XTREAM_AUTO -> {
+                Text(
+                    text = stringResource(R.string.setup_xtream_auto_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 14.dp),
+                )
+                TvTextField(
+                    label = stringResource(R.string.setup_field_user),
+                    value = state.username,
+                    onValueChange = viewModel::onUsernameChange,
+                    focusRequester = firstField,
                 )
                 Spacer(Modifier.height(14.dp))
                 TvTextField(

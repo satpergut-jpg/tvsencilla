@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         WatchProgressEntity::class,
         LikeEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -44,6 +44,16 @@ abstract class AppDatabase : RoomDatabase() {
                         "`likedAtMillis` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`itemId`))",
                 )
+            }
+        }
+
+        /**
+         * Versión 3: los canales que solo cambian de calidad (HD, FHD, SD) se guardan como uno
+         * solo, con las demás versiones en esta columna nueva.
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `channels` ADD COLUMN `qualityOptionsRaw` TEXT")
             }
         }
     }

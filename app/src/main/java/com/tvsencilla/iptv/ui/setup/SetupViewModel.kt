@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** The ways a user can sign in, all of them typed with the remote. */
-enum class LoginMethod { XTREAM, XTREAM_LINK, M3U }
+enum class LoginMethod { XTREAM, XTREAM_AUTO, XTREAM_LINK, M3U }
 
 data class SetupUiState(
     /** Null while the user is still choosing how to sign in. */
@@ -36,6 +36,7 @@ data class SetupUiState(
     val canSubmit: Boolean
         get() = !isChecking && when (method) {
             LoginMethod.XTREAM -> host.isNotBlank() && username.isNotBlank() && password.isNotBlank()
+            LoginMethod.XTREAM_AUTO -> username.isNotBlank() && password.isNotBlank()
             LoginMethod.XTREAM_LINK -> xtreamLink.isNotBlank()
             LoginMethod.M3U -> m3uUrl.isNotBlank()
             null -> false
@@ -75,6 +76,13 @@ class SetupViewModel @Inject constructor(
                 host = current.host.trim(),
                 username = current.username.trim(),
                 password = current.password,
+            )
+
+            LoginMethod.XTREAM_AUTO -> ContentSource(
+                type = SourceType.XTREAM,
+                username = current.username.trim(),
+                password = current.password,
+                autoServer = true,
             )
 
             LoginMethod.XTREAM_LINK -> parseXtreamLink(current.xtreamLink.trim()) ?: run {

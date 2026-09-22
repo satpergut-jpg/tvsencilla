@@ -10,7 +10,9 @@ import com.tvsencilla.iptv.domain.model.displayName
 import com.tvsencilla.iptv.domain.repository.ChannelRepository
 import com.tvsencilla.iptv.domain.repository.EpgRepository
 import com.tvsencilla.iptv.domain.repository.SettingsRepository
+import com.tvsencilla.iptv.domain.repository.SourceRepository
 import com.tvsencilla.iptv.domain.tuner.ChannelTunerFactory
+import com.tvsencilla.iptv.BuildConfig
 import com.tvsencilla.iptv.ui.util.userMessageRes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -40,6 +42,8 @@ data class LiveTvUiState(
     val hasFavorites: Boolean = false,
     /** La guía en cuadrícula es opcional y se activa en Ajustes. */
     val showFullGuide: Boolean = false,
+    val showMovies: Boolean = false,
+    val showSeries: Boolean = false,
 ) {
     val showingFavorites: Boolean get() = selectedCategoryId == FAVORITES_CATEGORY_ID
 
@@ -61,11 +65,21 @@ data class FavoriteNotice(val channelName: String, val addedAsNumber: Int?)
 /** Categoría virtual que agrupa los favoritos del usuario. */
 const val FAVORITES_CATEGORY_ID = "__favoritos__"
 
+/** Piezas del estado que no dependen de la lista de canales, combinadas aparte por límite de aridad. */
+private data class ExtraState(
+    @StringRes val error: Int?,
+    val refreshing: Boolean,
+    val showGuide: Boolean,
+    val supportsMovies: Boolean,
+    val supportsSeries: Boolean,
+)
+
 @HiltViewModel
 class LiveTvViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
     private val epgRepository: EpgRepository,
     private val settingsRepository: SettingsRepository,
+    private val sourceRepository: SourceRepository,
     tunerFactory: ChannelTunerFactory,
 ) : ViewModel() {
 
@@ -97,10 +111,16 @@ class LiveTvViewModel @Inject constructor(
         channelRepository.observeFavorites(),
         channelRepository.observeCategories(),
         selectedCategoryId,
-        combine(loadError, isRefreshing, settingsRepository.settings) { error, refreshing, settings ->
-            Triple(error, refreshing, settings.showEpgGrid)
+        combine(
+            loadError,
+            isRefreshing,
+            settingsRepository.settings,
+            sourceRepository.capabilities,
+        ) { error, refreshing, settings, capabilities ->
+            ExtraState(error, refreshing, settings.showEpgGrid, capabilities.supportsMovies, capabilities.supportsSeries)
         },
-    ) { channels, favorites, categories, categoryId, (error, refreshing, showGuide) ->
+    ) { channels, favorites, categories, categoryId, extra ->
+        val (error, refreshing, showGuide, supportsMovies, supportsSeries) = extra
         val visible = when (categoryId) {
             null -> channels
             FAVORITES_CATEGORY_ID -> favorites
@@ -116,6 +136,8 @@ class LiveTvViewModel @Inject constructor(
             allChannels = favorites + channels.filterNot { it.id in favoriteIds },
             hasFavorites = favorites.isNotEmpty(),
             showFullGuide = showGuide,
+            showMovies = supportsMovies && !BuildConfig.SOLO_DIRECTO,
+            showSeries = supportsSeries && !BuildConfig.SOLO_DIRECTO,
         )
     }.stateIn(
         scope = viewModelScope,

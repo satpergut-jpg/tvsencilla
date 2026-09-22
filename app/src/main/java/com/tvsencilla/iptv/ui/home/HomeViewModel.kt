@@ -13,26 +13,28 @@ import com.tvsencilla.iptv.domain.repository.SourceRepository
 import com.tvsencilla.iptv.domain.repository.VodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** Un canal para la fila "Directos ahora", con lo que emite en este momento si la guía lo sabe. */
+/** Un canal para la fila "Directos ahora", con lo que emite en este momento. */
 data class LiveNowItem(val channel: Channel, val now: EpgProgram?)
+
+/**
+ * Los canales en directo agrupados por categoría ("Fútbol", "Baloncesto"…) para sus propias filas.
+ * [categoryName] es null cuando el canal no tiene categoría; la UI decide qué título ponerle.
+ */
+data class LiveNowGroup(val categoryName: String?, val items: List<LiveNowItem>)
 
 data class HomeUiState(
     val showMovies: Boolean = false,
     val showSeries: Boolean = false,
     val continueWatching: List<ContinueWatchingItem> = emptyList(),
-    val liveNow: List<LiveNowItem> = emptyList(),
+    val liveNow: List<LiveNowGroup> = emptyList(),
     /** Set when the user asked to land straight on the last channel watched. */
     val jumpToChannelId: String? = null,
 )
@@ -48,17 +50,21 @@ class HomeViewModel @Inject constructor(
 
     private var jumpConsumed = false
 
-    /** Los favoritos del usuario y, si aún no tiene, los primeros canales de la lista. */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val liveNow: Flow<List<LiveNowItem>> = channelRepository.observeFavorites()
-        .flatMapLatest { favorites ->
-            if (favorites.isNotEmpty()) flowOf(favorites) else channelRepository.observeChannels()
-        }
-        .map { channels ->
-            channels.take(LIVE_NOW_CARDS).map { channel ->
-                val now = runCatching { epgRepository.observeNowNext(channel.epgChannelId).first().now }.getOrNull()
-                LiveNowItem(channel, now)
-            }
+    /**
+     * Solo los canales que ahora mismo emiten algo entran en la fila; el resto no aparece. Se
+     * agrupan por categoría para que "Fútbol", "Baloncesto"… tengan su propia fila.
+     */
+    private val liveNow: Flow<List<LiveNowGroup>> = epgRepository.observeLiveNow()
+        .map { matches ->
+            matches
+                .groupBy { it.channel.categoryName?.trim()?.takeUnless(String::isEmpty) }
+                .map { (categoryName, group) ->
+                    LiveNowGroup(
+                        categoryName = categoryName,
+                        items = group.take(LIVE_NOW_CARDS_PER_CATEGORY).map { LiveNowItem(it.channel, it.program) },
+                    )
+                }
+                .sortedWith(compareBy(nullsLast()) { it.categoryName })
         }
 
     val state: StateFlow<HomeUiState> = combine(
@@ -95,4 +101,4 @@ class HomeViewModel @Inject constructor(
     }
 }
 
-private const val LIVE_NOW_CARDS = 12
+private const val LIVE_NOW_CARDS_PER_CATEGORY = 12

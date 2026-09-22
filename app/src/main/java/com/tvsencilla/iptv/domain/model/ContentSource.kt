@@ -13,6 +13,11 @@ data class ContentSource(
     val host: String? = null,
     val username: String? = null,
     val password: String? = null,
+    /**
+     * El usuario no ha fijado un servidor propio: [host] es el último que funcionó, y si deja de
+     * responder se prueban los demás servidores conocidos hasta encontrar uno que sirva.
+     */
+    val autoServer: Boolean = false,
 ) {
     /** Base URL of an Xtream server, always without a trailing slash. */
     val normalizedHost: String?

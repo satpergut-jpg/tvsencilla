@@ -97,10 +97,10 @@ class VodRepositoryImpl @Inject constructor(
             return stored.toDomain(seasons = vodDao.episodesOf(id).toSeasons())
         }
 
-        val source = sourceRepository.current() ?: return stored.toDomain()
-        val detail = runCatching { registry.forSource(source).fetchSeriesDetail(source, id) }
-            .getOrNull()
-            ?: return stored.toDomain()
+        sourceRepository.current() ?: return stored.toDomain()
+        val detail = runCatching {
+            sourceRepository.withFailover { registry.forSource(it).fetchSeriesDetail(it, id) }
+        }.getOrNull() ?: return stored.toDomain()
 
         val episodes = detail.seasons.flatMap { it.episodes }
         vodDao.upsertEpisodes(episodes.map { it.toEntity() })
@@ -119,13 +119,16 @@ class VodRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh(force: Boolean) = refreshMutex.withLock {
-        val source = sourceRepository.current() ?: return@withLock
+        sourceRepository.current() ?: return@withLock
         val stale = refreshTracker.isStale(RefreshTracker.Kind.VOD, RefreshTracker.VOD_MAX_AGE)
         if (!force && !stale && vodDao.movieCount() > 0) return@withLock
 
-        val provider = registry.forSource(source)
-        val movies = runCatching { provider.fetchMovies(source) }.getOrDefault(emptyList())
-        val series = runCatching { provider.fetchSeries(source) }.getOrDefault(emptyList())
+        val movies = runCatching {
+            sourceRepository.withFailover { registry.forSource(it).fetchMovies(it) }
+        }.getOrDefault(emptyList())
+        val series = runCatching {
+            sourceRepository.withFailover { registry.forSource(it).fetchSeries(it) }
+        }.getOrDefault(emptyList())
         if (movies.isEmpty() && series.isEmpty()) return@withLock
 
         vodDao.replaceCatalog(

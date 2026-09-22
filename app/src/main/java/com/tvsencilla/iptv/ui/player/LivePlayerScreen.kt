@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
@@ -214,6 +215,15 @@ fun LivePlayerScreen(
                             text = stringResource(R.string.live_catch_up),
                             icon = Icons.Default.Replay,
                             onClick = viewModel::watchCurrentProgrammeFromStart,
+                            minHeight = 56.dp,
+                        )
+                    }
+                    val selectedQuality = state.selectedQuality
+                    if (channel.hasQualityOptions && selectedQuality != null) {
+                        BigButton(
+                            text = stringResource(R.string.live_switch_quality, selectedQuality.label),
+                            icon = Icons.Default.HighQuality,
+                            onClick = viewModel::switchQuality,
                             minHeight = 56.dp,
                         )
                     }

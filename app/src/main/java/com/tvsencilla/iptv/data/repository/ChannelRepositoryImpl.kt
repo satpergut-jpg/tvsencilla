@@ -6,6 +6,7 @@ import com.tvsencilla.iptv.data.local.toDomain
 import com.tvsencilla.iptv.data.local.toEntity
 import com.tvsencilla.iptv.data.provider.ProviderRegistry
 import com.tvsencilla.iptv.data.settings.RefreshTracker
+import com.tvsencilla.iptv.domain.channel.ChannelQualityGrouping
 import com.tvsencilla.iptv.domain.model.Category
 import com.tvsencilla.iptv.domain.model.Channel
 import com.tvsencilla.iptv.domain.model.EpgProgram
@@ -87,18 +88,19 @@ class ChannelRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh(force: Boolean) = refreshMutex.withLock {
-        val source = sourceRepository.current() ?: throw ProviderException(ProviderException.Reason.BAD_CREDENTIALS)
+        sourceRepository.current() ?: throw ProviderException(ProviderException.Reason.BAD_CREDENTIALS)
         val stale = refreshTracker.isStale(RefreshTracker.Kind.CHANNELS, RefreshTracker.CHANNELS_MAX_AGE)
         if (!force && !stale && channelDao.count() > 0) return@withLock
 
-        val catalog = registry.forSource(source).fetchLive(source)
+        val catalog = sourceRepository.withFailover { registry.forSource(it).fetchLive(it) }
         if (catalog.channels.isEmpty()) throw ProviderException(ProviderException.Reason.EMPTY)
 
+        val channels = ChannelQualityGrouping.group(catalog.channels)
         channelDao.replaceAll(
-            channels = catalog.channels.map { it.toEntity() },
+            channels = channels.map { it.toEntity() },
             categories = catalog.categories.map { it.toEntity() },
         )
-        restoreOrderFromProfile(catalog.channels.map { it.id }.toSet())
+        restoreOrderFromProfile(channels.map { it.id }.toSet())
         refreshTracker.markRefreshed(RefreshTracker.Kind.CHANNELS)
     }
 

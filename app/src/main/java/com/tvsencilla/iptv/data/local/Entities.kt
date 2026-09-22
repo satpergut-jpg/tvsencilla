@@ -16,6 +16,8 @@ data class ChannelEntity(
     val epgChannelId: String?,
     val listNumber: Int,
     val supportsCatchUp: Boolean,
+    /** Otras calidades del mismo canal, codificadas por [com.tvsencilla.iptv.data.local.toRaw]. */
+    val qualityOptionsRaw: String? = null,
 )
 
 @Entity(tableName = "categories")

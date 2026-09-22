@@ -24,6 +24,13 @@ interface SourceRepository {
     /** Validates the source against the provider before storing it. */
     suspend fun save(source: ContentSource): ProviderCapabilities
     suspend fun clear()
+
+    /**
+     * Ejecuta [action] contra la fuente guardada. Si es de servidor automático y falla, prueba los
+     * demás servidores conocidos hasta que uno funcione, y deja ese guardado para la próxima vez.
+     * Con un servidor fijo, [action] se ejecuta tal cual, sin reintentos.
+     */
+    suspend fun <T> withFailover(action: suspend (ContentSource) -> T): T
 }
 
 interface ChannelRepository {
@@ -46,6 +53,9 @@ interface ChannelRepository {
 
 interface EpgRepository {
     fun observeNowNext(epgChannelId: String?): Flow<NowNext>
+
+    /** Los canales que ahora mismo emiten algo, según la guía. */
+    fun observeLiveNow(): Flow<List<ProgramMatch>>
     fun observeSchedule(epgChannelId: String, fromMillis: Long, toMillis: Long): Flow<List<EpgProgram>>
     suspend fun refresh(force: Boolean = false)
     suspend fun programAt(epgChannelId: String, atMillis: Long): EpgProgram?

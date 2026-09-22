@@ -176,6 +176,21 @@ interface EpgDao {
     )
     suspend fun searchPrograms(pattern: String, fromMillis: Long, toMillis: Long): List<ProgramOnChannel>
 
+    /** Los canales que ahora mismo tienen un programa en emisión, para la fila "Directos ahora". */
+    @Query(
+        """
+        SELECT c.*, f.position AS favoritePosition,
+               p.title AS programTitle, p.startMillis AS programStart, p.endMillis AS programEnd
+        FROM epg_programs p
+        INNER JOIN channels c ON c.epgChannelId = p.epgChannelId
+        LEFT JOIN favorites f ON f.channelId = c.id
+        WHERE p.startMillis <= :atMillis AND p.endMillis > :atMillis
+        ORDER BY c.categoryName ASC, c.listNumber ASC
+        LIMIT 500
+        """,
+    )
+    suspend fun programsLiveNow(atMillis: Long): List<ProgramOnChannel>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(programs: List<EpgProgramEntity>)
 

@@ -2,6 +2,7 @@ package com.tvsencilla.iptv.data.local
 
 import com.tvsencilla.iptv.domain.model.Category
 import com.tvsencilla.iptv.domain.model.Channel
+import com.tvsencilla.iptv.domain.model.ChannelQuality
 import com.tvsencilla.iptv.domain.model.EpgProgram
 import com.tvsencilla.iptv.domain.model.Episode
 import com.tvsencilla.iptv.domain.model.Movie
@@ -22,6 +23,7 @@ fun ChannelWithFavorite.toDomain(): Channel = Channel(
     listNumber = channel.listNumber,
     favoriteNumber = favoritePosition?.plus(1),
     supportsCatchUp = channel.supportsCatchUp,
+    qualityOptions = channel.qualityOptionsRaw.toQualityOptions(),
 )
 
 fun Channel.toEntity(): ChannelEntity = ChannelEntity(
@@ -34,7 +36,24 @@ fun Channel.toEntity(): ChannelEntity = ChannelEntity(
     epgChannelId = epgChannelId,
     listNumber = listNumber,
     supportsCatchUp = supportsCatchUp,
+    qualityOptionsRaw = qualityOptions.toRaw(),
 )
+
+/** "HDurlcuotaurl…": separadores de control, nunca presentes en una URL o etiqueta. */
+private const val QUALITY_ENTRY_SEPARATOR = ''
+private const val QUALITY_FIELD_SEPARATOR = ''
+
+private fun List<ChannelQuality>.toRaw(): String? =
+    takeIf { it.size > 1 }
+        ?.joinToString(QUALITY_ENTRY_SEPARATOR.toString()) { "${it.label}$QUALITY_FIELD_SEPARATOR${it.streamUrl}" }
+
+private fun String?.toQualityOptions(): List<ChannelQuality> =
+    this?.split(QUALITY_ENTRY_SEPARATOR)
+        ?.mapNotNull { entry ->
+            val parts = entry.split(QUALITY_FIELD_SEPARATOR)
+            if (parts.size == 2) ChannelQuality(label = parts[0], streamUrl = parts[1]) else null
+        }
+        .orEmpty()
 
 fun CategoryEntity.toDomain(channelCount: Int = 0): Category =
     Category(id = id, name = name, channelCount = channelCount)

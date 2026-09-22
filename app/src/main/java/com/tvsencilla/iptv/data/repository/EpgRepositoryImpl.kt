@@ -65,6 +65,27 @@ class EpgRepositoryImpl @Inject constructor(
     override suspend fun programAt(epgChannelId: String, atMillis: Long): EpgProgram? =
         epgDao.programAt(epgChannelId, atMillis)?.toDomain()
 
+    /** Reconsulta cada poco para que la fila "Directos ahora" retire por sí sola lo que ha acabado. */
+    override fun observeLiveNow(): Flow<List<ProgramMatch>> = ticker(NOW_NEXT_TICK_MILLIS).map { now ->
+        val hidden = settings.current().hiddenCategoryIds
+        epgDao.programsLiveNow(now)
+            .asSequence()
+            .filterNot { it.channel.categoryId in hidden }
+            .distinctBy { it.channel.id }
+            .map { row ->
+                ProgramMatch(
+                    channel = ChannelWithFavorite(row.channel, row.favoritePosition).toDomain(),
+                    program = EpgProgram(
+                        epgChannelId = row.channel.epgChannelId.orEmpty(),
+                        title = row.programTitle,
+                        startMillis = row.programStart,
+                        endMillis = row.programEnd,
+                    ),
+                )
+            }
+            .toList()
+    }
+
     override suspend fun searchPrograms(query: String): List<ProgramMatch> {
         val now = System.currentTimeMillis()
         val hidden = settings.current().hiddenCategoryIds
@@ -94,19 +115,20 @@ class EpgRepositoryImpl @Inject constructor(
     }
 
     override suspend fun refresh(force: Boolean) = refreshMutex.withLock {
-        val source = sourceRepository.current() ?: return@withLock
-        val provider = registry.forSource(source)
+        sourceRepository.current() ?: return@withLock
         val stale = refreshTracker.isStale(RefreshTracker.Kind.EPG, RefreshTracker.EPG_MAX_AGE)
         if (!force && !stale && epgDao.count() > 0) return@withLock
 
         withContext(Dispatchers.IO) {
             // Batching keeps a 100 MB guide down to a few hundred kilobytes of live memory.
             val batch = ArrayList<EpgProgramEntity>(BATCH_SIZE)
-            provider.fetchEpg(source) { program ->
-                batch += program.toEntity()
-                if (batch.size >= BATCH_SIZE) {
-                    epgDao.upsertBlocking(batch)
-                    batch.clear()
+            sourceRepository.withFailover { source ->
+                registry.forSource(source).fetchEpg(source) { program ->
+                    batch += program.toEntity()
+                    if (batch.size >= BATCH_SIZE) {
+                        epgDao.upsertBlocking(batch)
+                        batch.clear()
+                    }
                 }
             }
             if (batch.isNotEmpty()) epgDao.upsertBlocking(batch)

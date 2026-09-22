@@ -1,21 +1,18 @@
 package com.tvsencilla.iptv.ui.home
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,12 +20,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LiveTv
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tv
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,30 +30,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.tvsencilla.iptv.R
 import com.tvsencilla.iptv.domain.model.ContinueWatchingItem
 import com.tvsencilla.iptv.domain.model.displayName
-import com.tvsencilla.iptv.ui.components.FocusableSurface
 import com.tvsencilla.iptv.ui.components.LiveCard
+import com.tvsencilla.iptv.ui.components.NavRail
 import com.tvsencilla.iptv.ui.components.PosterCard
 import com.tvsencilla.iptv.ui.components.ProgressStripe
+import com.tvsencilla.iptv.ui.components.RAIL_COLLAPSED
 import com.tvsencilla.iptv.ui.components.RemoteImage
 import com.tvsencilla.iptv.ui.components.SectionTitle
 import com.tvsencilla.iptv.ui.theme.Accent
 import com.tvsencilla.iptv.ui.theme.LiveRed
 import com.tvsencilla.iptv.ui.theme.ScreenBackground
-import com.tvsencilla.iptv.ui.theme.Tint
 import com.tvsencilla.iptv.ui.theme.overscan
 import com.tvsencilla.iptv.ui.util.formatHourMinute
 import kotlinx.coroutines.delay
@@ -117,10 +105,11 @@ fun PremiumHome(
         progress = item.now?.progressAt(now),
     )
 
+    val liveNowFallbackLabel = stringResource(R.string.home_live_now)
     val now = rememberClock()
     var focusedHero by remember { mutableStateOf<Hero?>(null) }
     val defaultHero = state.continueWatching.firstOrNull()?.let(::heroOf)
-        ?: state.liveNow.firstOrNull()?.let { heroOf(it, now) }
+        ?: state.liveNow.firstOrNull()?.items?.firstOrNull()?.let { heroOf(it, now) }
     val hero = focusedHero ?: defaultHero
 
     Box(Modifier.fillMaxSize().background(ScreenBackground)) {
@@ -176,28 +165,27 @@ fun PremiumHome(
                         }
                     }
                 }
-                if (state.liveNow.isNotEmpty()) {
-                    item(key = "live") {
-                        Shelf(stringResource(R.string.home_live_now)) {
-                            items(state.liveNow, key = { it.channel.id }) { item ->
-                                LiveCard(
-                                    channelName = item.channel.name,
-                                    logoUrl = item.channel.logoUrl,
-                                    programTitle = item.now?.title,
-                                    progress = item.now?.progressAt(now),
-                                    onClick = { onJumpToChannel(item.channel.id) },
-                                    modifier = Modifier
-                                        .width(214.dp)
-                                        .onFocusChanged { if (it.hasFocus) focusedHero = heroOf(item, now) },
-                                )
-                            }
+                items(state.liveNow, key = { "live_${it.categoryName}" }) { group ->
+                    Shelf(group.categoryName ?: liveNowFallbackLabel) {
+                        items(group.items, key = { it.channel.id }) { item ->
+                            LiveCard(
+                                channelName = item.channel.name,
+                                logoUrl = item.channel.logoUrl,
+                                programTitle = item.now?.title,
+                                progress = item.now?.progressAt(now),
+                                onClick = { onJumpToChannel(item.channel.id) },
+                                modifier = Modifier
+                                    .width(214.dp)
+                                    .onFocusChanged { if (it.hasFocus) focusedHero = heroOf(item, now) },
+                            )
                         }
                     }
                 }
             }
         }
 
-        Rail(
+        NavRail(
+            current = null,
             showMovies = state.showMovies,
             showSeries = state.showSeries,
             firstDestination = firstDestination,
@@ -271,68 +259,6 @@ private fun Shelf(title: String, row: LazyListScope.() -> Unit) {
     }
 }
 
-/** Rail de destinos: solo iconos hasta que recibe el foco; entonces se despliega con los nombres. */
-@Composable
-private fun Rail(
-    showMovies: Boolean,
-    showSeries: Boolean,
-    firstDestination: FocusRequester,
-    onSearch: () -> Unit,
-    onLiveTv: () -> Unit,
-    onMovies: () -> Unit,
-    onSeries: () -> Unit,
-    onSettings: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val width by animateDpAsState(
-        targetValue = if (expanded) RAIL_EXPANDED else RAIL_COLLAPSED,
-        animationSpec = tween(220),
-        label = "railWidth",
-    )
-    Column(
-        modifier = modifier
-            .width(width)
-            .onFocusChanged { expanded = it.hasFocus },
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-    ) {
-        RailItem(stringResource(R.string.common_search), Icons.Default.Search, expanded, onSearch)
-        RailItem(
-            stringResource(R.string.home_live_tv), Icons.Default.LiveTv, expanded, onLiveTv,
-            modifier = Modifier.focusRequester(firstDestination),
-        )
-        if (showMovies) RailItem(stringResource(R.string.home_movies), Icons.Default.Movie, expanded, onMovies)
-        if (showSeries) RailItem(stringResource(R.string.home_series), Icons.Default.Tv, expanded, onSeries)
-        Spacer(Modifier.height(10.dp))
-        RailItem(stringResource(R.string.home_settings), Icons.Default.Settings, expanded, onSettings)
-    }
-}
-
-@Composable
-private fun RailItem(
-    text: String,
-    icon: ImageVector,
-    expanded: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    FocusableSurface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        brush = Tint.Neutral,
-        contentPadding = 14.dp,
-    ) { _ ->
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(imageVector = icon, contentDescription = if (expanded) null else text, modifier = Modifier.size(28.dp))
-            if (expanded) {
-                Spacer(Modifier.width(14.dp))
-                Text(text = text, style = MaterialTheme.typography.labelLarge, maxLines = 1)
-            }
-        }
-    }
-}
-
 /** Hora actual, refrescada cada 30 s; también sirve para mover las barras de progreso. */
 @Composable
 private fun rememberClock(): Long {
@@ -345,6 +271,3 @@ private fun rememberClock(): Long {
     }
     return now
 }
-
-private val RAIL_COLLAPSED = 64.dp
-private val RAIL_EXPANDED = 236.dp

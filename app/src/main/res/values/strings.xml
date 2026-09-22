@@ -33,6 +33,8 @@
     <string name="setup_choose_title">¿Cómo quiere entrar? Elija con las flechas y pulse Aceptar</string>
     <string name="setup_type_m3u">Lista M3U (una dirección de internet)</string>
     <string name="setup_type_xtream">Servidor, usuario y contraseña (Xtream)</string>
+    <string name="setup_type_xtream_auto">Solo usuario y contraseña</string>
+    <string name="setup_xtream_auto_hint">Probaremos varios servidores automáticamente hasta encontrar uno que funcione.</string>
     <string name="setup_type_xtream_link">Enlace completo de Xtream</string>
     <string name="setup_field_xtream_link">Enlace que le dio su proveedor (con usuario y contraseña)</string>
     <string name="setup_error_bad_link">El enlace no tiene usuario y contraseña. Revíselo o use la opción de servidor, usuario y contraseña.</string>
@@ -61,6 +63,7 @@
     <!-- TV en directo -->
     <string name="live_title">TV en directo</string>
     <string name="live_all_categories">Todos los canales</string>
+    <string name="live_other_channels">Otros canales</string>
     <string name="live_category_news">Noticias</string>
     <string name="live_category_sports">Deportes</string>
     <string name="live_category_movies">Cine</string>
@@ -72,6 +75,7 @@
     <string name="live_previous_channel">Canal anterior</string>
     <string name="live_open_list">Ver la lista de canales</string>
     <string name="live_catch_up">Ver desde el principio</string>
+    <string name="live_switch_quality">Calidad: %1$s</string>
     <string name="live_full_guide">Guía completa</string>
     <plurals name="live_channel_count">
         <item quantity="one">%1$d canal</item>
